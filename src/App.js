@@ -7,6 +7,10 @@ const defaultState = {
   isEqual: false,
 };
 
+const endWithOperator = /[*+-/]$/;
+const endWithMinus = /\d{1,}[*+/]-$/;
+const doubleOperation = /\d{1,}[*+-/][*+-/]$/;
+
 const OPERATIONS = { "+": "+", "−": "-", x: "*", "/": "/" };
 class App extends React.Component {
   constructor(props) {
@@ -28,12 +32,22 @@ class App extends React.Component {
           calcScreen: "",
         });
       } else {
+        let screen = this.state.calcOperation + this.state.calcScreen;
         this.setState({
           calcScreen: "",
-          calcOperation:
-            this.state.calcOperation +
-            this.state.calcScreen +
-            OPERATIONS[value],
+          calcOperation: screen.match(endWithOperator)
+            ? (screen + OPERATIONS[value]).match(endWithMinus)
+              ? screen + OPERATIONS[value]
+              : screen.match(doubleOperation)
+              ? this.state.calcOperation.slice(
+                  0,
+                  this.state.calcOperation.length - 2
+                ) + OPERATIONS[value]
+              : this.state.calcOperation.slice(
+                  0,
+                  this.state.calcOperation.length - 1
+                ) + OPERATIONS[value]
+            : screen + OPERATIONS[value],
         });
       }
     } else if (
@@ -56,7 +70,6 @@ class App extends React.Component {
         calcScreen: this.state.calcScreen + value,
       });
     } else if ("=" === value && this.state.calcOperation) {
-      console.log(this.state.calcOperation + this.state.calcScreen);
       try {
         this.setState({
           calcScreen: eval(this.state.calcOperation + this.state.calcScreen),
